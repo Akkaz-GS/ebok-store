@@ -61,9 +61,13 @@
                     </td>
                     <td>
                         @if($order->status === 'lunas')
-                            <a href="{{ route('pembeli.download', $order) }}"
-                               class="btn btn-sm btn-success">
-                                <i class="bi bi-download"></i> Unduh
+                             <a href="{{ route('pembeli.download', $order) }}"
+                                class="btn btn-sm btn-success">
+                                    <i class="bi bi-download"></i> Unduh
+                            </a>
+                            <a href="{{ route('ebook.show', $order->ebook->slug) }}"
+                                class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-star"></i> Ulasan
                             </a>
                         @elseif($order->status === 'pending' && !$order->payment_proof)
                             <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
