@@ -1,59 +1,148 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📚 EbookStore — Platform Jual Beli Ebook Digital
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+EbookStore adalah aplikasi web berbasis Laravel untuk jual beli ebook digital, dikembangkan sebagai project akademik dengan arsitektur multi-role sesuai use case diagram yang telah ditentukan. Sistem ini menghubungkan **Penjual** yang ingin menjual ebook, **Pembeli** yang ingin membeli dan mengunduh ebook, serta **Admin** yang mengelola keseluruhan platform.
 
-## About Laravel
+## Daftar Isi
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [Fitur Utama](#fitur-utama)
+- [Aktor & Hak Akses](#aktor--hak-akses)
+- [Tech Stack](#tech-stack)
+- [Struktur Database](#struktur-database)
+- [Instalasi & Setup](#instalasi--setup)
+- [Akun Demo](#akun-demo)
+- [Struktur Folder Penting](#struktur-folder-penting)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fitur Utama
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Pembeli
+- Registrasi & login akun
+- Mencari dan memfilter ebook berdasarkan kategori atau kata kunci
+- Melihat detail ebook (deskripsi, harga, rating, ulasan)
+- Membeli ebook dan mengunggah bukti pembayaran
+- Melihat riwayat pembelian beserta status pembayaran
+- Mengunduh ebook setelah pembayaran terverifikasi
+- Memberikan ulasan dan rating untuk ebook yang sudah dibeli
 
-## Learning Laravel
+### Penjual
+- Login ke dashboard penjual
+- Mengelola data ebook (tambah, edit, hapus) lengkap dengan cover dan file PDF
+- File PDF disimpan di private storage agar tidak bisa diakses langsung tanpa pembayaran
+- Mengonfirmasi atau menolak pembayaran dari pembeli
+- Melihat laporan penjualan dengan filter bulan/tahun
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Admin
+- Dashboard statistik keseluruhan sistem (jumlah pembeli, penjual, ebook, transaksi)
+- Mengelola data user (tambah, edit, hapus, atur role)
+- Mengelola kategori ebook
+- Melihat laporan transaksi global beserta rekap per kategori
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Aktor & Hak Akses
 
-## Laravel Sponsors
+| Aktor | Cara Mendapatkan Akun | Akses |
+|---|---|---|
+| Pembeli | Registrasi mandiri melalui halaman daftar | Dashboard pembeli, katalog, pembelian, unduhan |
+| Penjual | Dibuat oleh Admin | Dashboard penjual, manajemen ebook, laporan penjualan |
+| Admin | Akun bawaan (seeder) | Dashboard admin, manajemen user & kategori, laporan global |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Registrasi publik hanya menghasilkan akun dengan role **Pembeli**. Akun Penjual dan Admin dikelola langsung oleh Admin melalui menu Kelola User.
 
-### Premium Partners
+## Tech Stack
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **Backend**: Laravel
+- **Frontend**: Blade Template + Bootstrap 5
+- **Autentikasi**: Laravel Breeze
+- **Database**: MySQL (via Laragon)
+- **Storage**: Local disk Laravel — disk `public` untuk cover ebook & bukti pembayaran, disk `private` untuk file PDF ebook
 
-## Contributing
+## Struktur Database
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Tabel | Keterangan |
+|---|---|
+| `users` | Data pengguna dengan kolom `role` (pembeli/penjual/admin) |
+| `categories` | Kategori ebook |
+| `ebooks` | Data ebook: judul, deskripsi, harga, cover, file PDF, status |
+| `orders` | Transaksi pembelian: status pending/lunas/ditolak, bukti pembayaran |
+| `downloads` | Log riwayat pengunduhan ebook |
+| `reviews` | Ulasan dan rating dari pembeli |
+| `promos` | Diskon untuk ebook tertentu dalam rentang waktu |
 
-## Code of Conduct
+## Instalasi & Setup
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Clone repository
+   ```bash
+   git clone https://github.com/Akkaz-GS/ebok-store.git
+   cd ebok-store
+   ```
 
-## Security Vulnerabilities
+2. Install dependencies
+   ```bash
+   composer install
+   npm install
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3. Salin file environment dan generate application key
+   ```bash
+   copy .env.example .env
+   php artisan key:generate
+   ```
 
-## License
+4. Sesuaikan konfigurasi database di `.env`
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=ebook_store
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+5. Jalankan migration dan seeder
+   ```bash
+   php artisan migrate:fresh --seed
+   ```
+
+6. Buat symbolic link untuk storage publik
+   ```bash
+   php artisan storage:link
+   ```
+
+7. Jalankan server
+   ```bash
+   php artisan serve
+   ```
+
+   Aplikasi dapat diakses di `http://127.0.0.1:8000`
+
+## Akun Demo
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@ebook.com | password |
+| Penjual | penjual@ebook.com | password |
+| Pembeli | pembeli@ebook.com | password |
+
+## Struktur Folder Penting
+
+```
+app/
+├── Http/Controllers/
+│   ├── HomeController.php       # Beranda & pencarian publik
+│   ├── EbookController.php       # CRUD ebook (penjual) & detail ebook (publik)
+│   ├── OrderController.php       # Pembelian & riwayat pembeli
+│   ├── DownloadController.php    # Unduh ebook dengan verifikasi pembayaran
+│   ├── ReviewController.php      # Ulasan & rating
+│   ├── PembeliController.php     # Dashboard pembeli
+│   ├── PenjualController.php     # Dashboard, penjualan, laporan penjual
+│   ├── AdminController.php       # Dashboard & laporan admin
+│   ├── UserController.php        # Kelola user (admin)
+│   └── CategoryController.php    # Kelola kategori (admin)
+├── Models/                        # Eloquent model & relasi antar tabel
+└── Http/Middleware/RoleMiddleware.php  # Pembatasan akses berdasarkan role
+
+resources/views/
+├── home/        # Halaman publik (beranda, kategori, detail ebook)
+├── auth/        # Halaman login & registrasi
+├── pembeli/     # Dashboard & riwayat pembeli
+├── penjual/     # Dashboard, manajemen ebook, laporan penjual
+└── admin/       # Dashboard, kelola user, kategori, laporan admin
+```
