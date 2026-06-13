@@ -1,5 +1,4 @@
 # 📚 EbookStore — Platform Jual Beli Ebook Digital
-
 EbookStore adalah aplikasi web berbasis Laravel untuk jual beli ebook digital, dikembangkan sebagai project akademik dengan arsitektur multi-role sesuai use case diagram yang telah ditentukan. Sistem ini menghubungkan **Penjual** yang ingin menjual ebook, **Pembeli** yang ingin membeli dan mengunduh ebook, serta **Admin** yang mengelola keseluruhan platform.
 
 ## Daftar Isi
@@ -15,13 +14,13 @@ EbookStore adalah aplikasi web berbasis Laravel untuk jual beli ebook digital, d
 ## Fitur Utama
 
 ### Pembeli
-- Registrasi & login akun
+- Registrasi & login akun (registrasi publik otomatis berperan sebagai Pembeli)
 - Mencari dan memfilter ebook berdasarkan kategori atau kata kunci
 - Melihat detail ebook (deskripsi, harga, rating, ulasan)
 - Membeli ebook dan mengunggah bukti pembayaran
 - Melihat riwayat pembelian beserta status pembayaran
 - Mengunduh ebook setelah pembayaran terverifikasi
-- Memberikan ulasan dan rating untuk ebook yang sudah dibeli
+- Memberikan ulasan dan rating untuk ebook yang sudah dibeli, dengan akses cepat ke halaman ulasan dari Dashboard maupun Riwayat Pembelian
 
 ### Penjual
 - Login ke dashboard penjual
@@ -53,6 +52,10 @@ Registrasi publik hanya menghasilkan akun dengan role **Pembeli**. Akun Penjual 
 - **Autentikasi**: Laravel Breeze
 - **Database**: MySQL (via Laragon)
 - **Storage**: Local disk Laravel — disk `public` untuk cover ebook & bukti pembayaran, disk `private` untuk file PDF ebook
+
+## Tampilan & Responsivitas
+
+Seluruh halaman dibangun dengan Bootstrap 5 sehingga otomatis menyesuaikan ukuran layar (desktop, tablet, mobile). Halaman dashboard (Pembeli, Penjual, Admin) menggunakan sidebar yang dapat disembunyikan/ditampilkan melalui tombol menu (hamburger) pada layar kecil, sehingga konten tetap nyaman diakses dari perangkat mobile.
 
 ## Struktur Database
 
