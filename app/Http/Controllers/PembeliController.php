@@ -4,29 +4,46 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Ebook;
+use App\Models\Review;
 use Illuminate\Http\Request;
 
 class PembeliController extends Controller
 {
-    public function dashboard()
+   public function dashboard()
     {
-        $totalBeli     = Order::where('buyer_id', auth()->id())->count();
-        $totalLunas    = Order::where('buyer_id', auth()->id())->where('status', 'lunas')->count();
-        $totalPending  = Order::where('buyer_id', auth()->id())->where('status', 'pending')->count();
+        $userId = auth()->id();
 
-        $orderTerbaru  = Order::where('buyer_id', auth()->id())
-                              ->with(['ebook.category'])
-                              ->latest()->take(5)->get();
+        $totalEbooks = Order::where('buyer_id', $userId)
+            ->whereIn('status', ['dibayar', 'selesai'])->count();
 
-        $rekomendasiEbook = Ebook::where('status', 'aktif')
-                                 ->whereNotIn('id', Order::where('buyer_id', auth()->id())
-                                     ->where('status', 'lunas')->pluck('ebook_id'))
-                                 ->with(['category', 'promo'])
-                                 ->latest()->take(4)->get();
+        $totalSpent = Order::where('buyer_id', $userId)
+            ->whereIn('status', ['dibayar', 'selesai'])->sum('total_price');
+
+        $pendingOrders = Order::where('buyer_id', $userId)
+            ->where('status', 'menunggu_verifikasi')->count();
+
+        $totalReviews = Review::where('buyer_id', $userId)->count();
+        // ↑ cek juga nama kolom di tabel reviews kalau error berikutnya muncul di sini
+
+        $recentOrders = Order::with('ebook.seller')
+            ->where('buyer_id', $userId)->latest()->take(5)->get();
+
+        $recommendedEbooks = Ebook::with(['seller', 'promo'])
+            ->where('status', 'aktif')->latest()->take(5)->get();
 
         return view('pembeli.dashboard', compact(
-            'totalBeli', 'totalLunas', 'totalPending',
-            'orderTerbaru', 'rekomendasiEbook'
+            'totalEbooks', 'totalSpent', 'pendingOrders', 'totalReviews', 'recentOrders', 'recommendedEbooks'
         ));
+    }
+
+    public function library()
+    {
+        $myEbooks = Order::with('ebook.seller')
+            ->where('buyer_id', auth()->id())
+            ->whereIn('status', ['dibayar', 'selesai'])
+            ->latest()
+            ->get();
+
+        return view('pembeli.library', compact('myEbooks'));
     }
 }

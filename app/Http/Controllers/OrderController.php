@@ -8,17 +8,22 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    // Riwayat pembelian pembeli
+   // OrderController
     public function index()
     {
-        $orders = Order::where('buyer_id', auth()->id())
-                       ->with(['ebook.category'])
-                       ->latest()
-                       ->paginate(10);
+        $userId = auth()->id();
 
-        return view('pembeli.riwayat', compact('orders'));
+        $orders = Order::with('ebook.seller')->where('buyer_id', $userId)->latest()->paginate(10);
+
+        $totalSpent = Order::where('buyer_id', $userId)
+            ->whereIn('status', ['dibayar', 'selesai'])->sum('total_price');
+
+        $pendingCount = Order::where('buyer_id', $userId)->where('status', 'menunggu_verifikasi')->count();
+        $completedCount = Order::where('buyer_id', $userId)->whereIn('status', ['dibayar', 'selesai'])->count();
+
+        return view('pembeli.riwayat', compact('orders', 'totalSpent', 'pendingCount', 'completedCount'));
     }
-
+    
     // Proses beli ebook
     public function store(Request $request, Ebook $ebook)
     {

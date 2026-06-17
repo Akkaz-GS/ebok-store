@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+\Illuminate\Pagination\Paginator::useBootstrapFive();
 
 class AppServiceProvider extends ServiceProvider
 {

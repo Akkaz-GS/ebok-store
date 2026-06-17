@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Ebook;
+use App\Models\Promo;
 use App\Models\Order;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -12,21 +13,18 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        $totalPembeli   = User::where('role', 'pembeli')->count();
-        $totalPenjual   = User::where('role', 'penjual')->count();
-        $totalEbook     = Ebook::count();
-        $totalTransaksi = Order::where('status', 'lunas')->sum('total_price');
-        $totalOrder     = Order::count();
-
-        $userTerbaru = User::latest()->take(5)->get();
-        $ebookTerbaru = Ebook::with(['seller', 'category'])->latest()->take(5)->get();
-        $orderTerbaru = Order::with(['buyer', 'ebook'])->latest()->take(5)->get();
-
-        return view('admin.dashboard', compact(
-            'totalPembeli', 'totalPenjual', 'totalEbook',
-            'totalTransaksi', 'totalOrder',
-            'userTerbaru', 'ebookTerbaru', 'orderTerbaru'
-        ));
+        return view('admin.dashboard', [
+            'totalUsers'   => User::count(),
+            'totalOrders'  => Order::count(),
+            'totalRevenue' => Order::whereIn('status',['dibayar','selesai'])->sum('total_price'),
+            'activePromos' => Promo::count(),
+            'recentUsers'  => User::latest()->take(5)->get(),
+            'orderStats'   => [
+                'selesai'             => Order::whereIn('status',['dibayar','selesai'])->count(),
+                'menunggu_verifikasi' => Order::where('status','menunggu_verifikasi')->count(),
+                'ditolak'             => Order::where('status','ditolak')->count(),
+            ],
+        ]);
     }
 
     public function laporan(Request $request)

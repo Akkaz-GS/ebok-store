@@ -1,100 +1,155 @@
 @extends('layouts.admin')
-@section('title', 'Kelola User')
+
+@section('title', 'User Management - Admin Panel')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+
+{{--
+    DATA YANG DIBUTUHKAN DI UserController@index:
+    - $users         : User::latest()->paginate(10) — bisa difilter role/status via request
+    - $totalUsers    : User::count()
+    - $totalPenjual  : User::where('role','penjual')->count()
+    - $totalPembeli  : User::where('role','pembeli')->count()
+    - $newThisWeek   : User::where('created_at','>=',now()->startOfWeek())->count()
+--}}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
     <div>
-        <h4 class="fw-bold mb-1">Kelola User</h4>
-        <p class="text-muted small mb-0">Manajemen semua akun pengguna</p>
+        <h2 class="page-title">User Management</h2>
+        <p class="page-subtitle mb-0">Monitor, kelola, dan verifikasi pengguna marketplace.</p>
     </div>
-    <a href="{{ route('admin.user.create') }}" class="btn btn-danger">
-        <i class="bi bi-plus-lg"></i> Tambah User
+    <a href="{{ route('admin.user.create') }}" class="btn-cta">
+        <i class="bi bi-person-plus"></i> Add New User
     </a>
 </div>
 
-{{-- Filter --}}
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body py-3">
-        <form method="GET" class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <input type="text" name="search" class="form-control form-control-sm"
-                       placeholder="Cari nama atau email..." value="{{ request('search') }}">
-            </div>
-            <div class="col-md-3">
-                <select name="role" class="form-select form-select-sm">
-                    <option value="">Semua Role</option>
-                    <option value="pembeli"  {{ request('role') === 'pembeli'  ? 'selected' : '' }}>Pembeli</option>
-                    <option value="penjual"  {{ request('role') === 'penjual'  ? 'selected' : '' }}>Penjual</option>
-                    <option value="admin"    {{ request('role') === 'admin'    ? 'selected' : '' }}>Admin</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-danger btn-sm w-100">Filter</button>
-            </div>
-            @if(request('search') || request('role'))
-            <div class="col-md-2">
-                <a href="{{ route('admin.user.index') }}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
-            </div>
+{{-- Stat Cards --}}
+<div class="stat-grid mb-4" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-people"></i></div>
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">{{ number_format($totalUsers) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(251,191,36,0.12);color:#d97706;"><i class="bi bi-shop"></i></div>
+        <div class="stat-label">Active Sellers</div>
+        <div class="stat-value">{{ number_format($totalPenjual) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(163,37,63,0.1);color:var(--accent);"><i class="bi bi-shield-check"></i></div>
+        <div class="stat-label">Verified Buyers</div>
+        <div class="stat-value">{{ number_format($totalPembeli) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dff3e6;color:#1f9d55;"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="stat-label">New This Week</div>
+        <div class="stat-value" style="color:#1f9d55;">+{{ $newThisWeek }}</div>
+    </div>
+</div>
+
+<div class="section-block">
+    {{-- Filter Tabs & Search --}}
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div class="d-flex gap-2 flex-wrap">
+            @foreach ([
+                ['label'=>'All Users', 'value'=>''],
+                ['label'=>'Buyers',    'value'=>'pembeli'],
+                ['label'=>'Sellers',   'value'=>'penjual'],
+                ['label'=>'Admins',    'value'=>'admin'],
+            ] as $tab)
+                <a href="{{ route('admin.user.index', ['role' => $tab['value']]) }}"
+                   style="padding:8px 18px;border-radius:8px;font-weight:600;font-size:0.88rem;text-decoration:none;
+                   {{ request('role') === $tab['value'] ? 'background:var(--accent);color:#fff;' : 'background:var(--input-bg);color:var(--text-dark);' }}">
+                    {{ $tab['label'] }}
+                </a>
+            @endforeach
+        </div>
+        <form method="GET" action="{{ route('admin.user.index') }}" class="d-flex gap-2">
+            @if(request('role'))
+                <input type="hidden" name="role" value="{{ request('role') }}">
             @endif
+            <div style="position:relative;">
+                <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Cari nama atau email..."
+                       style="padding:9px 12px 9px 36px;border:1px solid var(--border-light);border-radius:8px;background:var(--input-bg);font-size:0.88rem;width:240px;">
+            </div>
+            <button type="submit" class="btn-cta" style="padding:9px 18px;font-size:0.88rem;">Cari</button>
         </form>
     </div>
+
+    {{-- Table --}}
+    @if ($users->isEmpty())
+        <p class="text-muted text-center py-4">Tidak ada user ditemukan.</p>
+    @else
+        <div class="table-responsive">
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>User Details</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Join Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($users as $user)
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div style="width:40px;height:40px;border-radius:50%;background:var(--input-bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;color:var(--text-dark);">
+                                        {{ strtoupper(substr($user->name, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight:600;font-size:0.92rem;">{{ $user->name }}</div>
+                                        <div style="font-size:0.8rem;color:var(--text-muted);">{{ $user->email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @php
+                                    $roleStyle = match($user->role) {
+                                        'admin'   => 'background:#e8eaff;color:#4f46e5;',
+                                        'penjual' => 'background:#fdf3d9;color:#a9762b;',
+                                        default   => 'background:#f0f0f8;color:#555;',
+                                    };
+                                @endphp
+                                <span class="status-badge" style="{{ $roleStyle }}">{{ ucfirst($user->role) }}</span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-success">
+                                    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1f9d55;margin-right:5px;"></span>Aktif
+                                </span>
+                            </td>
+                            <td style="font-size:0.88rem;">{{ $user->created_at->format('d M Y') }}</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ route('admin.user.edit', $user->id) }}" class="btn-table-action" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.user.destroy', $user->id) }}"
+                                          onsubmit="return confirm('Hapus user {{ $user->name }}?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn-table-action" title="Hapus" style="color:#c0294a;border:none;background:#fff;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+            <span style="font-size:0.88rem;color:var(--text-muted);">
+                Showing {{ $users->firstItem() }}–{{ $users->lastItem() }} of {{ number_format($users->total()) }} results
+            </span>
+            {{ $users->withQueryString()->links() }}
+        </div>
+    @endif
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        <table class="table mb-0 align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Bergabung</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($users as $user)
-                <tr>
-                    <td class="text-muted small">{{ $users->firstItem() + $loop->index }}</td>
-                    <td><span class="fw-semibold">{{ $user->name }}</span></td>
-                    <td class="text-muted small">{{ $user->email }}</td>
-                    <td>
-                        @if($user->role === 'admin')
-                            <span class="badge bg-danger">Admin</span>
-                        @elseif($user->role === 'penjual')
-                            <span class="badge" style="background:#ede9fe;color:#5b21b6">Penjual</span>
-                        @else
-                            <span class="badge bg-info">Pembeli</span>
-                        @endif
-                    </td>
-                    <td class="small text-muted">{{ $user->created_at->format('d M Y') }}</td>
-                    <td>
-                        <a href="{{ route('admin.user.edit', $user) }}"
-                           class="btn btn-sm btn-warning">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        @if($user->id !== auth()->id())
-                        <form action="{{ route('admin.user.destroy', $user) }}"
-                              method="POST" class="d-inline"
-                              onsubmit="return confirm('Hapus user {{ $user->name }}?')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-danger">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
-                        @endif
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="text-center py-5 text-muted">Tidak ada user ditemukan</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="mt-3">{{ $users->withQueryString()->links() }}</div>
 @endsection

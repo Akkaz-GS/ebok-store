@@ -267,9 +267,25 @@
         .ebook-cover img { width: 100%; height: 100%; object-fit: cover; }
         .ebook-cover-placeholder {
             width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--accent) 100%);
             display: flex; align-items: center; justify-content: center;
-            color: var(--text-muted);
-            font-size: 2rem;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 16px;
+            line-height: 1.3;
+        }
+        .promo-badge {
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            vertical-align: middle;
         }
         .ebook-title {
             font-family: 'Poppins', sans-serif;
@@ -448,16 +464,19 @@
                         <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
                     </li>
                     {{-- Sesuaikan href di bawah jika route Catalog / Pricing / About sudah dibuat --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('home') }}#kategori-populer">Catalog</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="#">Catalog</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Pricing</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">About</a></li>
                 </ul>
                 <div class="d-flex gap-2 justify-content-center mt-3 mt-lg-0">
                     @auth
-                        {{-- Ganti route('dashboard') dengan route dashboard sesuai role user jika diperlukan --}}
-                        <a href="{{ route('dashboard') }}" class="btn btn-outline-nav">Dashboard</a>
+                        @if (auth()->user()->isPembeli())
+                            <a href="{{ route('pembeli.dashboard') }}" class="btn btn-outline-nav">Dashboard</a>
+                        @elseif (auth()->user()->isPenjual())
+                            <a href="{{ route('penjual.dashboard') }}" class="btn btn-outline-nav">Dashboard</a>
+                        @elseif (auth()->user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-nav">Dashboard</a>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-signup-nav">Logout</button>

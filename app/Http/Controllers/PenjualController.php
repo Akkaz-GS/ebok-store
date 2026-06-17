@@ -77,4 +77,80 @@ class PenjualController extends Controller
 
         return view('penjual.laporan', compact('orders', 'totalPendapatan'));
     }
+    
+    public function library()
+    {
+        $ebooks = Ebook::where('seller_id', auth()->id())
+                    ->withCount('orders')
+                    ->latest()
+                    ->get();
+
+        $totalSales = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                        ->where('status', 'completed')
+                        ->whereMonth('created_at', now()->month)
+                        ->sum('total_price');            // ← fix
+
+        $activeReaders = $ebooks->where('status', 'aktif')->count();
+
+        $avgRating = \App\Models\Review::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                                    ->avg('rating') ?? 0;
+
+        return view('penjual.library', compact('ebooks', 'totalSales', 'activeReaders', 'avgRating'));
+    }
+
+    public function inventory()
+    {
+        $ebooks = Ebook::where('seller_id', auth()->id())
+                    ->with('category')
+                    ->withCount('orders')
+                    ->latest()
+                    ->paginate(10);
+
+        $totalEbooks      = Ebook::where('seller_id', auth()->id())->count();
+        $activeListings   = Ebook::where('seller_id', auth()->id())->where('status', 'aktif')->count();
+        $lowStockAlerts   = Ebook::where('seller_id', auth()->id())->where('status', 'nonaktif')->count();
+        $monthlyRoyalties = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                                ->where('status', 'completed')
+                                ->whereMonth('created_at', now()->month)
+                                ->sum('total_price') * 0.7;   // ← fix
+
+        return view('penjual.inventory', compact(
+            'ebooks', 'totalEbooks', 'activeListings', 'lowStockAlerts', 'monthlyRoyalties'
+        ));
+    }
+
+    public function sales()
+    {
+        $orders = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                        ->with(['ebook', 'buyer'])   // ← ganti 'user' → 'buyer'
+                        ->latest()
+                        ->paginate(15);
+
+        $orders = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                    ->with(['ebook', 'buyer'])
+                    ->latest()
+                    ->paginate(15);
+
+        $totalOrdersToday = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                                ->whereDate('created_at', today())
+                                ->count();
+
+        $dailyRevenue = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                            ->where('status', 'completed')
+                            ->whereDate('created_at', today())
+                            ->sum('total_price');
+
+        $completedOrders = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                                ->where('status', 'completed')
+                                ->whereMonth('created_at', now()->month)
+                                ->count();
+
+        $pendingOrders = Order::whereHas('ebook', fn($q) => $q->where('seller_id', auth()->id()))
+                            ->where('status', 'pending')
+                            ->count();
+
+        return view('penjual.penjualan', compact(
+            'orders', 'totalOrdersToday', 'dailyRevenue', 'completedOrders', 'pendingOrders'
+        ));
+    }
 }

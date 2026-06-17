@@ -31,19 +31,23 @@ Route::middleware(['auth', 'role:pembeli'])
         Route::post('/order/{order}/bukti', [OrderController::class, 'uploadBukti'])->name('order.bukti');
         Route::get('/unduh/{order}', [DownloadController::class, 'download'])->name('download');
         Route::post('/ulasan/{ebook}', [ReviewController::class, 'store'])->name('review.store');
+        Route::get('/library', [PembeliController::class, 'library'])->name('library');
     });
 
-// ─── PENJUAL ──────────────────────────────────────────
 Route::middleware(['auth', 'role:penjual'])
     ->prefix('penjual')
     ->name('penjual.')
     ->group(function () {
-        Route::get('/dashboard', [PenjualController::class, 'dashboard'])->name('dashboard');
-        Route::resource('ebook', EbookController::class)->except(['show']);
-        Route::resource('promo', PromoController::class)->only(['create', 'store', 'destroy']);
-        Route::get('/penjualan', [PenjualController::class, 'penjualan'])->name('penjualan');
+        Route::get('/dashboard',  [PenjualController::class, 'dashboard'])->name('dashboard');
+        Route::get('/library',    [PenjualController::class, 'library'])->name('library');
+        Route::get('/inventory',  [PenjualController::class, 'inventory'])->name('inventory');  // ← TAMBAH
+        Route::get('/sales',      [PenjualController::class, 'sales'])->name('sales');
+        Route::get('/penjualan',  [PenjualController::class, 'penjualan'])->name('penjualan');
+        Route::get('/laporan',    [PenjualController::class, 'laporan'])->name('laporan');
         Route::patch('/order/{order}/status', [PenjualController::class, 'updateStatus'])->name('order.status');
-        Route::get('/laporan', [PenjualController::class, 'laporan'])->name('laporan');
+        Route::resource('ebook',  EbookController::class)->except(['show']);
+        Route::patch('/ebook/{id}/toggle', [EbookController::class, 'toggle'])->name('ebook.toggle');
+        Route::resource('promo',  PromoController::class)->only(['create', 'store', 'destroy']);
     });
 
 // ─── ADMIN ────────────────────────────────────────────

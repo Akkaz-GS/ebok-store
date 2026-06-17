@@ -11,19 +11,18 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::query();
-
-        if ($request->role) {
-            $query->where('role', $request->role);
-        }
-        if ($request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                  ->orWhere('email', 'like', '%'.$request->search.'%');
-            });
-        }
-
-        $users = $query->latest()->paginate(15);
-        return view('admin.user.index', compact('users'));
+        if ($request->role)   $query->where('role', $request->role);
+        if ($request->search) $query->where(fn($q) =>
+            $q->where('name','like',"%{$request->search}%")
+            ->orWhere('email','like',"%{$request->search}%")
+        );
+        return view('admin.user.index', [
+            'users'       => $query->latest()->paginate(10),
+            'totalUsers'  => User::count(),
+            'totalPenjual'=> User::where('role','penjual')->count(),
+            'totalPembeli'=> User::where('role','pembeli')->count(),
+            'newThisWeek' => User::where('created_at','>=',now()->startOfWeek())->count(),
+        ]);
     }
 
     public function create()

@@ -10,41 +10,32 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Ebook::where('status', 'aktif')
-                      ->with(['category', 'seller', 'promo']);
+        $query = Ebook::query()->where('status', 'aktif');
 
-        if ($request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('title', 'like', '%'.$request->search.'%')
-                  ->orWhere('description', 'like', '%'.$request->search.'%')
-                  ->orWhereHas('seller', fn($q) =>
-                      $q->where('name', 'like', '%'.$request->search.'%')
-                  );
+        // Filter pencarian: judul, penulis, atau nama kategori
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('author', 'like', "%{$search}%")
+                  ->orWhereHas('category', function ($cat) use ($search) {
+                      $cat->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
-        if ($request->category) {
-            $query->whereHas('category', fn($q) =>
-                $q->where('slug', $request->category)
-            );
+        // Filter kategori berdasarkan slug (diklik dari kartu kategori)
+        if ($request->filled('category')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
         }
 
-        $ebooks     = $query->latest()->paginate(8)->withQueryString();
+        $ebooks = $query->latest()->paginate(8)->withQueryString();
+
         $categories = Category::withCount('ebooks')->get();
 
         return view('home.index', compact('ebooks', 'categories'));
-    }
-
-    public function kategori(string $slug)
-    {
-        $category = Category::where('slug', $slug)->firstOrFail();
-
-        $ebooks = Ebook::where('status', 'aktif')
-                       ->where('category_id', $category->id)
-                       ->with(['category', 'seller', 'promo'])
-                       ->latest()
-                       ->paginate(12);
-
-        return view('home.kategori', compact('ebooks', 'category'));
     }
 }
